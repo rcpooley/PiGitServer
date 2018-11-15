@@ -1,0 +1,26 @@
+{
+  "name": "PiGitServer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcpooley/PiGitServer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rcpooley/PiGitServer/issues"
+  },
+  "homepage": "https://github.com/rcpooley/PiGitServer#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "jsonwebtoken": "^8.4.0",
+    "node-rsa": "^1.0.1"
+  }
+}

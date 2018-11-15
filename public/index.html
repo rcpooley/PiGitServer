@@ -1,0 +1,109 @@
+<html>
+<head>
+    <title>Pi Git Server</title>
+    <script src="jquery-3.3.1.min.js"></script>
+    <style>
+        #bad_password {
+            color: red;
+            display: none;
+        }
+
+        #repos {
+            display: none;
+        }
+
+        #repos table {
+            border-collapse: collapse;
+        }
+
+        #repos th,
+        #repos td {
+            border: 1px solid black;
+        }
+
+        #add_repo {
+            display: none;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+<form id="auth_form">
+    <div id="bad_password">Incorrect password</div>
+    <label for="password">Password:</label>
+    <input id="password" type="text" />
+    <input type="submit" value="Login" />
+</form>
+
+<form id="add_repo">
+    <label for="repo_name">Repo name:</label>
+    <input id="repo_name" type="text" />
+    <input type="submit" value="Create Repo" />
+</form>
+
+<div id="repos"></div>
+
+<script>
+    let token;
+
+    $('#auth_form').submit(function () {
+        let password = $('#password').val();
+        $.post('/auth', {password}, function (resp) {
+            if (resp.success) {
+                onAuth(resp.token);
+            } else {
+                $('#bad_password').css('display', 'block');
+            }
+        });
+        return false;
+    });
+
+    function onAuth(lToken) {
+        token = lToken;
+        $('#auth_form').css('display', 'none');
+        $('#repos').css('display', 'block');
+        $('#add_repo').css('display', 'block');
+        loadRepos();
+    }
+
+    function loadRepos() {
+        $.post('/repos', {token}, function (resp) {
+            let repos = resp.repos.map(repo => {
+                let spl = repo.path.replace(/\\/g, '/').split('/');
+                repo.name = spl[spl.length - 1];
+                return repo;
+            });
+            let html = `
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                    </tr>`;
+            for (let i = 0; i < repos.length; i++) {
+                html += `
+                    <tr>
+                        <td>${repos[i].name}</td>
+                        <td>${repos[i].url}</td>
+                    </tr>`;
+            }
+
+            html += '</table>';
+            $('#repos').html(html);
+        });
+    }
+
+    $('#add_repo').submit(function () {
+        let name = $('#repo_name').val();
+        $.post('/addrepo', {token, name}, function (resp) {
+            if (resp.success) {
+                $('#repo_name').val('');
+                loadRepos();
+            } else {
+                alert(resp.error);
+            }
+        });
+        return false;
+    });
+</script>
+</body>
+</html>

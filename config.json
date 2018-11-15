@@ -1,0 +1,6 @@
+{
+  "password": "PutPasswordHere",
+  "reposRoot": "/path/to/repos/root",
+  "repoUrl": "git@192.168.1.1:/path/to/repos/root/",
+  "port": 80
+}
