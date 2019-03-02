@@ -25,6 +25,11 @@
             display: none;
             margin-bottom: 30px;
         }
+
+        .repos-tag {
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -66,29 +71,78 @@
         loadRepos();
     }
 
+    let repos;
     function loadRepos() {
         $.post('/repos', {token}, function (resp) {
-            let repos = resp.repos.map(repo => {
+            repos = {
+                _untagged: []
+            };
+            resp.repos.forEach(repo => {
                 let spl = repo.path.replace(/\\/g, '/').split('/');
                 repo.name = spl[spl.length - 1];
-                return repo;
+                if ('tag' in repo) {
+                    if (!(repo.tag in repos)) {
+                        repos[repo.tag] = [];
+                    }
+                    repos[repo.tag].push(repo);
+                } else {
+                    repos._untagged.push(repo);
+                }
             });
-            let html = `
+
+            const tags = Object.keys(repos).sort();
+            tags.splice(tags.indexOf('_untagged'), 1);
+            tags.unshift('_untagged');
+
+            let html = '';
+
+            tags.forEach(tag => {
+                html += createRepoTable(repos[tag], tag);
+            });
+
+            $('#repos').html(html);
+        });
+    }
+
+    function createRepoTable(repos, tag) {
+        if (repos.length === 0) {
+            return '';
+        }
+
+        let html = `
                 <table cellpadding="0" cellspacing="0">
                     <tr>
                         <th>Name</th>
                         <th>URL</th>
+                        <th>Tag</th>
                     </tr>`;
-            for (let i = 0; i < repos.length; i++) {
-                html += `
+        for (let i = 0; i < repos.length; i++) {
+            html += `
                     <tr>
                         <td>${repos[i].name}</td>
                         <td>${repos[i].url}</td>
+                        <td><button onclick="setTag('${tag}', ${i})">Set tag</button></td>
                     </tr>`;
-            }
+        }
 
-            html += '</table>';
-            $('#repos').html(html);
+        html += '</table>';
+
+        if (tag !== '_untagged') {
+            html = `<div class="repos-tag">${tag}:</div>` + html;
+        }
+
+        return html;
+    }
+
+    function setTag(tag, idx) {
+        const repo = repos[tag][idx];
+        const newTag = prompt(`New tag for ${repo.name}`, repo.tag);
+        $.post('/settag', {token, repo: repo.name, tag: newTag}, function (resp) {
+            if (resp.success) {
+                loadRepos();
+            } else {
+                alert(resp.error);
+            }
         });
     }
 
@@ -104,6 +158,8 @@
         });
         return false;
     });
+
+    $('#password').focus();
 </script>
 </body>
 </html>
